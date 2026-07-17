@@ -1,5 +1,6 @@
 import { ref, watch } from "vue"
 import { defineStore } from "pinia"
+import { createOrderApi } from "../api/orderApi.js"
 
 export const useOrderStore = defineStore("order", () => {
   const getSavedOrders = () => {
@@ -20,7 +21,7 @@ export const useOrderStore = defineStore("order", () => {
 
   const orders = ref(getSavedOrders())
 
-  const createOrder = (orderData) => {
+  const createOrder = async (orderData) => {
     if (!orderData || !Array.isArray(orderData.items)) {
       return {
         success: false,
@@ -36,7 +37,6 @@ export const useOrderStore = defineStore("order", () => {
     }
 
     const newOrder = {
-      id: Date.now(),
       createdAt: new Date().toISOString(),
 
       userId: orderData.userId,
@@ -57,20 +57,22 @@ export const useOrderStore = defineStore("order", () => {
       totalPrice: orderData.totalPrice,
     }
 
-    orders.value.push(newOrder)
+    const newOrderData = await createOrderApi(newOrder);
+
+    orders.value.push(newOrderData)
 
     return {
       success: true,
       message: "訂單建立成功",
-      order: newOrder,
+      order: newOrderData,
     }
   }
 
   const getOrderById = (id) => {
-    const orderId = Number(id)
+    const orderId = String(id)
 
     return orders.value.find((order) => {
-      return order.id === orderId
+      return String(order.id) === orderId
     })
   }
 

@@ -124,12 +124,6 @@ const handleSubmitOrder = async () => {
   try {
     isSubmitting.value = true
 
-    await new Promise((resolve) => {
-      setTimeout(() => {
-        resolve()
-      }, 800)
-    })
-
     const orderData = {
       userId: authStore.user?.id,
       userEmail: authStore.user?.email,
@@ -157,7 +151,7 @@ const handleSubmitOrder = async () => {
       totalPrice: cartStore.totalPrice,
     }
 
-    const result = orderStore.createOrder(orderData)
+    const result = await orderStore.createOrder(orderData)
 
     handleShowToast(result)
 
@@ -170,7 +164,7 @@ const handleSubmitOrder = async () => {
 
     handleShowToast({
       success: false,
-      message: "建立訂單失敗，請稍後再試",
+      message:  "訂單建立失敗，請確認 JSON Server 是否已啟動後再試一次。",
     })
   } finally {
     isSubmitting.value = false

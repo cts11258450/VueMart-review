@@ -52,6 +52,14 @@ const handleLogout = () => {
             我的訂單
           </RouterLink>
 
+          <RouterLink 
+            v-if="authStore.isLogin" 
+            to="/admin/products"
+            class="nav-link"
+          >
+            <p>後臺管理</p>
+          </RouterLink>
+
           <RouterLink
             v-if="!authStore.isLogin"
             to="/login"

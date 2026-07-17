@@ -1,10 +1,12 @@
 <script setup>
-import { ref, computed, watch } from "vue"
+import { ref, computed, watch, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 
 import { handleShowToast } from "../utils/toastHelper.js"
 
 import ProductCard from "../components/ProductCard.vue"
+import LoadingState from "../components/LoadingState.vue"
+import ErrorState from "../components/ErrorState.vue"
 
 import { useProductStore } from "../stores/product.js"
 import { useCartStore } from "../stores/cart.js"
@@ -29,6 +31,14 @@ const categories = computed(() => {
 
 const getSafeCategoryFromQuery = () => {
   const queryCategory = route.query.category
+
+  if (!queryCategory) {
+    return "all"
+  }
+
+  if (productStore.isLoading || productStore.products.length === 0) {
+    return queryCategory
+  }
 
   if (categories.value.includes(queryCategory)) {
     return queryCategory
@@ -61,6 +71,30 @@ const getQueryFromState = () => {
   }
 }
 
+const getStateFromQuery = () => {
+  return {
+    keyword: route.query.keyword || "",
+    category: getSafeCategoryFromQuery(),
+    sort: getSafeSortTypeFromQuery(),
+  }
+}
+
+const getSafeQueryFromState = (state) => {
+  return {
+    keyword: state.keyword?.trim() || undefined,
+    category: state.category !== "all" ? state.category : undefined,
+    sort: state.sort !== "default" ? state.sort : undefined,
+  }
+}
+
+const isSameQuery = (queryA, queryB) => {
+  return (
+    (queryA.keyword || undefined) === (queryB.keyword || undefined) &&
+    (queryA.category || undefined) === (queryB.category || undefined) &&
+    (queryA.sort || undefined) === (queryB.sort || undefined)
+  )
+}
+
 const syncQueryFromState = () => {
   router.replace({
     path: "/product",
@@ -71,6 +105,18 @@ const syncQueryFromState = () => {
 watch(
   () => [route.query.keyword, route.query.category, route.query.sort],
   () => {
+    const safeState = getStateFromQuery()
+    const safeQuery = getSafeQueryFromState(safeState)
+
+    if (!isSameQuery(route.query, safeQuery)) {
+      router.replace({
+        path: "/product",
+        query: safeQuery,
+      })
+
+      return
+    }
+
     syncStateFromQuery()
   },
   {
@@ -81,7 +127,32 @@ watch(
 watch(
   [searchKeyword, selectedCategory, sortType],
   () => {
+    const safeQuery = getQueryFromState()
+
+    if (isSameQuery(route.query, safeQuery)) {
+      return
+    }
+
     syncQueryFromState()
+  },
+)
+
+watch(
+  () => productStore.products.length,
+  () => {
+    const safeState = getStateFromQuery()
+    const safeQuery = getSafeQueryFromState(safeState)
+
+    if (!isSameQuery(route.query, safeQuery)) {
+      router.replace({
+        path: "/product",
+        query: safeQuery,
+      })
+
+      return
+    }
+
+    syncStateFromQuery()
   },
 )
 
@@ -137,6 +208,10 @@ const handleAddToCart = (product) => {
   const result = cartStore.addToCart(product)
   handleShowToast(result)
 }
+
+onMounted(() => {
+  productStore.fetchProducts()
+})
 </script>
 
 <template>
@@ -232,8 +307,22 @@ const handleAddToCart = (product) => {
       </p>
     </section>
 
+    <LoadingState
+      v-if="productStore.isLoading"
+      title="商品資料載入中..."
+      message="請稍候，正在取得最新商品資料。"
+    />
+
+    <ErrorState
+      v-else-if="productStore.errorMessage"
+      title="商品資料載入失敗"
+      :message="productStore.errorMessage"
+      retry-text="重新載入"
+      @retry="productStore.fetchProducts"
+    />
+
     <section
-      v-if="filteredProducts.length === 0"
+      v-else-if="filteredProducts.length === 0"
       class="empty-result"
     >
       <h3>找不到符合條件的商品</h3>

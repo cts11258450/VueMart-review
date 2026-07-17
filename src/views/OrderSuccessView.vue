@@ -10,14 +10,8 @@ const route = useRoute()
 const orderStore = useOrderStore()
 const authStore = useAuthStore()
 
-const orderId = computed(() => {
-  return Number(route.params.id)
-})
-
 const order = computed(() => {
-  return orderStore.orders.find((item) => {
-    return item.id === orderId.value
-  })
+  return orderStore.getOrderById(route.params.id)
 })
 
 const isOwner = computed(() => {

@@ -1,6 +1,9 @@
 <script setup>
-import { computed } from "vue"
+import { computed, onMounted } from "vue"
 import { useRoute, RouterLink } from "vue-router"
+
+import LoadingState from "../components/LoadingState.vue"
+import ErrorState from "../components/ErrorState.vue"
 
 import { useProductStore } from "../stores/product.js"
 import { useCartStore } from "../stores/cart.js"
@@ -12,14 +15,8 @@ const route = useRoute()
 const productStore = useProductStore()
 const cartStore = useCartStore()
 
-const productId = computed(() => {
-  return Number(route.params.id)
-})
-
 const product = computed(() => {
-  return productStore.products.find((item) => {
-    return item.id === productId.value
-  })
+  return productStore.getProductById(route.params.id)
 })
 
 const handleAddToCart = () => {
@@ -30,11 +27,29 @@ const handleAddToCart = () => {
   const result = cartStore.addToCart(product.value)
   handleShowToast(result)
 }
+
+onMounted(() => {
+  productStore.fetchProducts()
+})
 </script>
 
 <template>
   <section class="product-detail-page">
-    <div v-if="product" class="product-detail-container">
+    <LoadingState
+      v-if="productStore.isLoading"
+      title="商品資料載入中..."
+      message="請稍候，正在取得商品詳細資料。"
+    />
+
+    <ErrorState
+      v-else-if="productStore.errorMessage"
+      title="商品資料載入失敗"
+      :message="productStore.errorMessage"
+      retry-text="重新載入"
+      @retry="productStore.fetchProducts"
+    />
+
+    <div v-else-if="product" class="product-detail-container">
       <RouterLink to="/product" class="back-link">
         ← 返回商品列表
       </RouterLink>

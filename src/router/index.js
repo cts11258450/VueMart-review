@@ -11,6 +11,7 @@ import LoginView from "../views/LoginView.vue"
 import MemberView from "../views/MemberView.vue"
 import OrderHistoryView from "../views/OrderHistoryView.vue"
 import OrderDetailView from "../views/OrderDetailView.vue"
+import AdminProductsView from "../views/AdminProductsView.vue"
 
 import { useAuthStore } from "../stores/auth.js"
 
@@ -73,6 +74,15 @@ const router = createRouter({
       },
     },
     {
+      path: "/admin/products",
+      name: "admin-products",
+      component: AdminProductsView,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
       path: "/:pathMatch(.*)*",
       component: NotFoundView,
     },
@@ -89,6 +99,10 @@ router.beforeEach((to) => {
         redirect: to.fullPath
       }
     }
+  }
+
+  if(to.meta.requiresAdmin && !authStore.isAdmin){
+    return "/"
   }
 
   if (to.meta.guestOnly && authStore.isLogin) {

@@ -3,13 +3,27 @@ import { defineStore } from "pinia"
 
 export const useAuthStore = defineStore("auth", () => {
   const savedToken = localStorage.getItem("token")
-  const savedUser = localStorage.getItem("user")
+  const getSavedUser = ()=>{
+    try{
+      const saveItem = localStorage.getItem("user");
+      const savedUser = saveItem ? JSON.parse(saveItem) : null;
+      return savedUser;
+    }
+    catch(error){
+      console.warn("解析使用者資料失敗", error)
+      return null;
+    }
+  }
 
   const token = ref(savedToken || "")
-  const user = ref(savedUser ? JSON.parse(savedUser) : null)
+  const user = ref(getSavedUser())
 
   const isLogin = computed(() => {
     return !!token.value
+  })
+
+  const isAdmin = computed(()=>{
+    return user.value?.role === "admin"
   })
 
   const login = async (loginData) => {
@@ -33,6 +47,7 @@ export const useAuthStore = defineStore("auth", () => {
       id: 1,
       name: "測試會員",
       email: loginData.email,
+      role:"admin"
     }
 
     return {
@@ -78,6 +93,7 @@ export const useAuthStore = defineStore("auth", () => {
     token,
     user,
     isLogin,
+    isAdmin,
     login,
     logout,
   }
