@@ -290,6 +290,64 @@
       "totalQty": 2,
       "totalPrice": 17900,
       "id": "PW9rfLHagvI"
+    },
+    {
+      "createdAt": "2026-07-18T10:22:20.124Z",
+      "userId": "2",
+      "userEmail": "user@gmail.com",
+      "customer": {
+        "name": "11",
+        "phone": "0958096895",
+        "address": "11"
+      },
+      "payment": "credit-card",
+      "note": "",
+      "items": [
+        {
+          "id": "2",
+          "name": "無線降噪耳機",
+          "price": 5400,
+          "image": "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&w=800&q=80",
+          "qty": 1
+        }
+      ],
+      "totalQty": 1,
+      "totalPrice": 5400,
+      "id": "ymI6x9Utdh4"
+    }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "name": "管理員",
+      "email": "admin@gmail.com",
+      "password": "123456",
+      "role": "admin",
+      "createdAt": "2026-07-18T00:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "name": "一般會員",
+      "email": "user@gmail.com",
+      "password": "123456",
+      "role": "user",
+      "createdAt": "2026-07-18T00:00:00.000Z"
+    },
+    {
+      "name": "testName",
+      "email": "cts11258450@gmail.com",
+      "password": "123456789",
+      "role": "user",
+      "createdAt": "2026-07-18T10:49:57.226Z",
+      "id": "ADhxplF1Ezc"
+    },
+    {
+      "name": "testName",
+      "email": "cts7496021@gmail.com",
+      "password": "123456789",
+      "role": "user",
+      "createdAt": "2026-07-18T10:59:20.207Z",
+      "id": "J8QMzxZW0tg"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

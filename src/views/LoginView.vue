@@ -1,6 +1,6 @@
 <script setup>
-import { ref, reactive } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { ref, reactive, watch } from "vue"
+import { useRoute, useRouter, RouterLink } from "vue-router"
 import { useAuthStore } from "../stores/auth.js"
 import { handleShowToast } from "../utils/toastHelper.js"
 
@@ -8,9 +8,32 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const email = ref("")
+const isValidEmail = (emailValue) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)
+}
+
+const getEmailFromQuery = ()=>{
+  const emailFromQuery = route.query.email;
+  if(typeof emailFromQuery === "string"  && isValidEmail(emailFromQuery)){
+    return emailFromQuery
+  }
+  return "";
+}
+
+const getSafeRedirectPath = ()=>{
+  const redirect = route.query.redirect;
+  if(typeof redirect === "string" 
+      && redirect.startsWith("/")
+  ){
+    return redirect
+  }
+  return "/"
+}
+
+const email = ref(getEmailFromQuery())
 const password = ref("")
 const isLoading = ref(false)
+const loginErrorMessage = ref("")
 
 const errorMessage = reactive({
   email: "",
@@ -22,12 +45,9 @@ const resetErrorMessage = () => {
   errorMessage.password = ""
 }
 
-const isValidEmail = (emailValue) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)
-}
-
 const handleLogin = async () => {
   resetErrorMessage()
+  loginErrorMessage.value = "";
 
   let isValid = true
 
@@ -63,21 +83,33 @@ const handleLogin = async () => {
 
     handleShowToast(result)
 
-    if (result.success) {
-      const redirectPath = route.query.redirect || "/"
-      router.push(redirectPath)
+    if (!result.success) {
+      loginErrorMessage.value = result.message;
+      return;
     }
+    const redirectPath = getSafeRedirectPath();
+    router.push(redirectPath)
+
   } catch (error) {
     console.error("登入發生錯誤：", error)
-
-    handleShowToast({
+    const result = {
       success: false,
       message: "登入失敗，請稍後再試",
-    })
+    }
+    loginErrorMessage.value = result.message;
+    handleShowToast(result)
+
   } finally {
     isLoading.value = false
   }
 }
+
+watch(()=>{
+  return route.query.email
+}, ()=>{
+  email.value = getEmailFromQuery();
+})
+
 </script>
 
 <template>
@@ -91,6 +123,13 @@ const handleLogin = async () => {
         <p>密碼：123456</p>
       </div>
 
+      <p
+        v-if="loginErrorMessage"
+        class="login-error-message"
+      >
+        {{ loginErrorMessage }}
+      </p>
+
       <form class="login-form" @submit.prevent="handleLogin">
         <div class="form-group">
           <label for="email">Email</label>
@@ -99,6 +138,7 @@ const handleLogin = async () => {
             v-model="email"
             type="email"
             placeholder="請輸入 Email"
+            :disabled="isLoading"
           >
         </div>
 
@@ -113,6 +153,7 @@ const handleLogin = async () => {
             v-model="password"
             type="password"
             placeholder="請輸入密碼"
+            :disabled="isLoading"
           >
         </div>
 
@@ -127,7 +168,16 @@ const handleLogin = async () => {
         >
           {{ isLoading ? "登入中..." : "登入" }}
         </button>
+
+        <div class="register-link-wrap">
+          <span>還沒有帳號？</span>
+
+          <RouterLink to="/register" class="register-link">
+            前往註冊
+          </RouterLink>
+        </div>
       </form>
+
     </div>
   </section>
 </template>
@@ -244,5 +294,45 @@ const handleLogin = async () => {
 .login-button:disabled {
   background: #9ca3af;
   cursor: not-allowed;
+}
+
+.register-link-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  color: #4b5563;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.register-link {
+  color: #2563eb;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.register-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.form-group input:disabled {
+  cursor: not-allowed;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.login-error-message {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.6;
 }
 </style>

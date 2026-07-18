@@ -1,5 +1,6 @@
 import { ref, computed, watch } from "vue"
 import { defineStore } from "pinia"
+import { registerUserApi, loginUserApi } from "../api/authApi.js"
 
 export const useAuthStore = defineStore("auth", () => {
   const savedToken = localStorage.getItem("token")
@@ -26,33 +27,37 @@ export const useAuthStore = defineStore("auth", () => {
     return user.value?.role === "admin"
   })
 
+  const register = async (registerData) => {
+    const userData = {
+      name: registerData.name.trim(),
+      email: registerData.email.trim(),
+      password: registerData.password,
+      role: "user",
+      createdAt: new Date().toISOString(),
+    }
+    const result = await registerUserApi(userData);
+
+    return{
+      success: result.success,
+      message: result.message,
+      user: result.user,
+    }
+  }
+
   const login = async (loginData) => {
-    await new Promise((resolve)=>{
-      setTimeout(()=>{
-        resolve();
-      },2000)
-    })
-    if (loginData.password !== "123456") {
-      return {
-        success: false,
-        message: "密碼錯誤，測試密碼請輸入 123456",
-      }
+    const result = await loginUserApi(loginData);
+
+    if(!result.success){
+      return result
     }
 
-    const fakeToken = "fake-token-123"
-
-    token.value = fakeToken
-
-    user.value = {
-      id: 1,
-      name: "測試會員",
-      email: loginData.email,
-      role:"admin"
-    }
+    token.value = result.token;
+    user.value = result.user
 
     return {
       success: true,
-      message: "登入成功！",
+      message: result.message,
+      user: result.user
     }
   }
 
@@ -65,6 +70,7 @@ export const useAuthStore = defineStore("auth", () => {
       message: "已成功登出",
     }
   }
+
 
   watch(
     token,
@@ -96,5 +102,6 @@ export const useAuthStore = defineStore("auth", () => {
     isAdmin,
     login,
     logout,
+    register
   }
 })

@@ -12,6 +12,7 @@ import MemberView from "../views/MemberView.vue"
 import OrderHistoryView from "../views/OrderHistoryView.vue"
 import OrderDetailView from "../views/OrderDetailView.vue"
 import AdminProductsView from "../views/AdminProductsView.vue"
+import RegisterView from "../views/RegisterView.vue"
 
 import { useAuthStore } from "../stores/auth.js"
 
@@ -81,6 +82,13 @@ const router = createRouter({
         requiresAuth: true,
         requiresAdmin: true,
       },
+    },
+    {
+      path:"/register",
+      component:RegisterView,
+      meta:{
+        guestOnly: true,
+      }
     },
     {
       path: "/:pathMatch(.*)*",

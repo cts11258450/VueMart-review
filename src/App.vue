@@ -53,7 +53,7 @@ const handleLogout = () => {
           </RouterLink>
 
           <RouterLink 
-            v-if="authStore.isLogin" 
+            v-if="authStore.isLogin && authStore.isAdmin" 
             to="/admin/products"
             class="nav-link"
           >
